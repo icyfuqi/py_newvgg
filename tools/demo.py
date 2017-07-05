@@ -25,11 +25,8 @@ import caffe, os, sys, cv2
 import argparse
 
 CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
+           '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '12', '13', '14', '15',
+           '17','18', '19', '20', '21', '22', '25', '26', '27', '28', '30', '32')
 
 NETS = {'vgg16': ('VGG16',
                   'VGG16_faster_rcnn_final.caffemodel'),
@@ -41,7 +38,9 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
-        return
+        #return
+	ff=plt.gcf()
+        ff.savefig('/home/deepl/FQ/result/VGG500result/'+im_name)
 
     im = im[:, :, (2, 1, 0)]
     fig, ax = plt.subplots(figsize=(12, 12))
@@ -49,9 +48,11 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     for i in inds:
         bbox = dets[i, :4]
         score = dets[i, -1]
-
+        d=open(r'/home/deepl/FQ/result/VGG500result/jtbz.txt','a')#change
+        d.writelines(str([im_name,bbox[0], bbox[1],bbox[2], bbox[3],score])+'\n')
+        d.close()
         ax.add_patch(
-            plt.Rectangle((bbox[0], bbox[1]),
+        plt.Rectangle((bbox[0], bbox[1]),
                           bbox[2] - bbox[0],
                           bbox[3] - bbox[1], fill=False,
                           edgecolor='red', linewidth=3.5)
@@ -68,12 +69,18 @@ def vis_detections(im, class_name, dets, thresh=0.5):
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
+    fff=plt.gcf()
+    #m=re.findall(r"\d+",line)
+#   print m[2]
+    plt.axis('off')
+    fff.savefig('/home/deepl/FQ/result/VGG500result/'+im_name)
+    fff.clear()
 
 def demo(net, image_name):
     """Detect object classes in an image using pre-computed object proposals."""
 
     # Load the demo image
-    im_file = os.path.join(cfg.DATA_DIR, 'demo', image_name)
+    im_file = os.path.join('/','home','deepl','FQ','data','500testpictures',image_name)
     im = cv2.imread(im_file)
 
     # Detect all object classes and regress object bounds
@@ -85,11 +92,12 @@ def demo(net, image_name):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0])
 
     # Visualize detections for each class
-    CONF_THRESH = 0.8
+    CONF_THRESH = 0.3
     NMS_THRESH = 0.3
     for cls_ind, cls in enumerate(CLASSES[1:]):
         cls_ind += 1 # because we skipped background
         cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        print scores.shape,cls_ind
         cls_scores = scores[:, cls_ind]
         dets = np.hstack((cls_boxes,
                           cls_scores[:, np.newaxis])).astype(np.float32)
@@ -140,12 +148,15 @@ if __name__ == '__main__':
     im = 128 * np.ones((300, 500, 3), dtype=np.uint8)
     for i in xrange(2):
         _, _= im_detect(net, im)
-
-    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-                '001763.jpg', '004545.jpg']
+    im_names = []
+    f=open(r'/home/deepl/FQ/data/500_list.txt','r')
+    for lines in f:
+	im_names.append(str(lines.strip()))
+    #im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
+                #'001763.jpg', '004545.jpg']
     for im_name in im_names:
         print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
         print 'Demo for data/demo/{}'.format(im_name)
         demo(net, im_name)
 
-    plt.show()
+    #plt.show()
